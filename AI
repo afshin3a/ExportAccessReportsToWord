@@ -1,0 +1,50 @@
+Private Sub btnExportToWord_Click()
+    Dim dlgSaveFile As FileDialog
+    Dim strFilePath As String
+    Dim objWord As Object
+    Dim objDoc As Object
+    Dim rpt As Report
+    
+    ' Create a FileDialog object for selecting the save path
+    Set dlgSaveFile = Application.FileDialog(msoFileDialogSaveAs)
+    
+    ' Set the file type to Word Documents
+    dlgSaveFile.FilterIndex = 2
+    dlgSaveFile.Title = "Save As Word File"
+    
+    ' Display the FileDialog and check if the user selected a path or canceled
+    If dlgSaveFile.Show = -1 Then
+        strFilePath = dlgSaveFile.SelectedItems(1)
+    Else
+        Exit Sub
+    End If
+    
+    ' Open the desired report
+    Set rpt = Reports("Report1")
+    
+    ' Create a Word object and a new document in it
+    Set objWord = CreateObject("Word.Application")
+    objWord.Visible = True
+    Set objDoc = objWord.Documents.Add
+    
+    ' Copy the report content to Word
+    rpt.FilterOn = False
+    rpt.Filter = ""
+    rpt.Caption = ""
+    rpt.Visible = True
+    rpt.Printer.Orientation = acPRORLandscape
+    DoCmd.OutputTo acOutputReport, "", acFormatRTF, "", False, "", , acExportQualityPrint
+    DoCmd.OutputTo acOutputReport, "", acFormatRTF, strFilePath, False, "", , acExportQualityPrint
+    rpt.Visible = False
+    
+    ' Save and close the Word document
+    objDoc.SaveAs strFilePath
+    objDoc.Close
+    objWord.Quit
+    
+    ' Clean up memory
+    Set objWord = Nothing
+    Set objDoc = Nothing
+    Set rpt = Nothing
+    Set dlgSaveFile = Nothing
+End Sub
