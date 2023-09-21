@@ -1,0 +1,56 @@
+Sub ExportReportToWord()
+
+    Dim wordApp As Object
+    Dim wordDoc As Object
+    Dim reportName As String
+    Dim tempRTFPath As String
+    Dim docPath As String
+
+    ' Set the name of the report to export
+    reportName = "rptNames"
+
+    ' Generate a temporary path for the RTF file
+    tempRTFPath = Environ("Temp") & "\" & reportName & ".rtf"
+
+    ' Create a FileDialog object to get the save path
+    Dim fd As FileDialog
+    Set fd = Application.FileDialog(msoFileDialogSaveAs)
+    
+    ' Set the properties of the FileDialog
+    With fd
+        .Title = "Save Report As"
+        .InitialFileName = reportName & ".docx"
+        '.FilterIndex = 4 ' Word Documents (*.docx)
+        
+        ' Show the FileDialog and check if the user selected a file
+        If .Show = -1 Then
+            docPath = .SelectedItems(1)
+        Else
+            MsgBox "Operation cancelled by user.", vbExclamation
+            Exit Sub
+        End If
+    End With
+
+    ' Export the report to RTF
+    DoCmd.OutputTo ObjectType:=acOutputReport, _
+                    ObjectName:=reportName, _
+                    OutputFormat:=acFormatRTF, _
+                    OutputFile:=tempRTFPath
+
+    ' Open the RTF in Word and save as DOC
+    On Error Resume Next
+    Set wordApp = GetObject(, "Word.Application")
+    If Err.Number <> 0 Then
+        Set wordApp = CreateObject("Word.Application")
+    End If
+    On Error GoTo 0
+
+    Set wordDoc = wordApp.Documents.Open(tempRTFPath)
+    wordDoc.SaveAs2 docPath, FileFormat:=16 ' 0 corresponds to DOCX format
+    wordDoc.Close
+    Kill tempRTFPath ' Delete the temporary RTF file
+
+    ' Show a message to indicate completion
+    MsgBox "Report exported successfully as .doc format!", vbInformation
+
+End Sub
